@@ -1,7 +1,13 @@
+
 <?php
+require 'Konekcija.php';
+require 'models/avion.php';
+
+$avioni = Avion::vratiSve($konekcija);
+
+$poruka = "";
 
 session_start();
-$poruka="";
 
 if (!isset($_SESSION['zaposleni'])) {
     header('Location: prijava.php');
@@ -11,6 +17,17 @@ if (isset($_COOKIE["zaposleni"]))
     {
         $poruka="Ulogovani ste kao " . $_COOKIE["zaposleni"];
     }
+
+if(isset($_POST['izmeni'])){
+    $model = trim($_POST['model']);
+    $avion = trim($_POST['avion']);
+
+    if(Avion::izmeniModel($avion, $model, $konekcija)){
+        header("Location: index.php");
+    }else{
+        $poruka = "Doslo je do greske prilikom izmene modela aviona";
+    }
+}
 
 ?>
 <!DOCTYPE html>
@@ -28,10 +45,19 @@ if (isset($_COOKIE["zaposleni"]))
   <link href="assets/css/prettyPhoto.css" rel="stylesheet">
   <link href="assets/js/google-code-prettify/prettify.css" rel="stylesheet">
   <link href="assets/css/flexslider.css" rel="stylesheet">
+  <link href="assets/css/refineslide.css" rel="stylesheet">
   <link href="assets/css/font-awesome.css" rel="stylesheet">
+  <link href="assets/css/animate.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css?family=Open+Sans:400italic,400,600,700" rel="stylesheet">
+
   <link href="assets/css/style.css" rel="stylesheet">
   <link href="assets/color/default.css" rel="stylesheet">
+
+  <link rel="shortcut icon" href="assets/ico/favicon.ico">
+  <link rel="apple-touch-icon-precomposed" sizes="144x144" href="assets/ico/apple-touch-icon-144-precomposed.png">
+  <link rel="apple-touch-icon-precomposed" sizes="114x114" href="assets/ico/apple-touch-icon-114-precomposed.png">
+  <link rel="apple-touch-icon-precomposed" sizes="72x72" href="assets/ico/apple-touch-icon-72-precomposed.png">
+  <link rel="apple-touch-icon-precomposed" href="assets/ico/apple-touch-icon-57-precomposed.png">
 
 </head>
 
@@ -40,32 +66,35 @@ if (isset($_COOKIE["zaposleni"]))
   <section id="maincontent">
     <div class="container">
       <div class="row">
-        <h1>Pretraga aviona</h1>
-          <label for="pretraga">Pretraga po proizvodjacu</label>
-          <select class="form-control" id="pretraga">
+        <h1>Forma za izmenu modela aviona</h1>
+          <form method="post" action="">
 
-          </select>
-          <label for="sort">Sortiranje po nazivu</label>
-          <select class="form-control" id="sort">
-            <option value="asc">Od A do Z</option>
-            <option value="desc">Od Z do A</option>
-          </select>
-        <hr/>
-        <button onclick="pretrazi()" class="btn btn-large btn-rounded btn-color">Pretrazi</button>
+              <label for="avion">Avion</label>
+              <select name="avion" id="avion" class="form-control">
+                  <?php
+                foreach ($avioni as $avion){
+                  ?>
+                    <option value="<?= $avion->id?>"><?= $avion->proizvodjac." ".$avion->model?></option>
+                <?php
+                }
+                  ?>
+              </select>
+
+              <label for="model">Model</label>
+              <input type="text" class="form-control" name="model" id="model" style="border: 1px solid lightgrey">
+              <hr/>
+              <button type="submit" class="btn btn-large btn-rounded btn-color" name="izmeni">Izmeni </button>
+
+          </form>
+
       </div>
 
       <div class="row">
         <div class="span12">
-          <div class="blank10"></div>
+          <div class="blank20"></div>
         </div>
       </div>
 
-      <div class="row">
-        <div class="span12" id="rezultat">
-
-        </div>
-      </div>
-    </div>
   </section>
 
 <?php include 'footer.php'; ?>
@@ -82,37 +111,8 @@ if (isset($_COOKIE["zaposleni"]))
   <script src="assets/js/classie.js"></script>
   <script src="assets/js/cbpAnimatedHeader.min.js"></script>
   <script src="assets/js/jquery.ui.totop.js"></script>
+
   <script src="assets/js/custom.js"></script>
-
-    <script>
-        function uveziProizvodjace() {
-            $.ajax({
-                url: "server_proizvodjaci.php",
-                success: function (podaci) {
-                    let pr = '<option value="SVI_TIPOVI">Svi tipovi</option>' + podaci; 
-                    $("#pretraga").html(pr);
-                    pretrazi();
-                }
-            });
-        }
-        uveziProizvodjace();
-
-    function pretrazi() {
-        var proizvodjac = $("#pretraga").val();
-        var sort = $("#sort").val();
-        $.ajax({
-            url: "server_pretraga.php",
-            data: {
-                proizvodjac: proizvodjac,
-                sort: sort
-            },
-            success: function (podaci) {
-                $("#rezultat").html(podaci);
-            }
-        });
-    }
-
-    </script>
 
 
 </body>
